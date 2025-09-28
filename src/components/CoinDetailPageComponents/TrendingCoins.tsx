@@ -24,19 +24,67 @@ type topCoinObj = {
 const TrendingCoins = () => {
   const { isDark } = useTheme();
   const [topCoins, setTopCoins] = useState<topCoinObj[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
-  const fecthCoinData = async () => {
+  const fetchCoinData = async (signal: AbortSignal, retryCount = 0) => {
+    try {
+      setLoading(true);
+      setHasError(false);
 
-    const response = await axios.get(
-      "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false"
-    )
-    setTopCoins(response.data)
+      const response = await fetch(
+        "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false",
+        { signal }
+      );
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Only update state if we have valid data
+      if (data && Array.isArray(data) && data.length > 0) {
+        setTopCoins(data);
+        setLoading(false);
+        setHasError(false);
+      } else {
+        // Retry up to 2 times if no data
+        if (retryCount < 2) {
+          setTimeout(() => {
+            fetchCoinData(signal, retryCount + 1);
+          }, 1000);
+        } else {
+          setLoading(false);
+          setHasError(true);
+        }
+      }
+    } catch (error) {
+      if (error.name  === 'AbortError') {
+        console.log('Trending coins fetch was cancelled');
+        return;
+      }
+      console.warn('Error fetching trending coins:', error);
+
+      // Retry up to 2 times on error
+      if (retryCount < 2) {
+        setTimeout(() => {
+          fetchCoinData(signal, retryCount + 1);
+        }, 2000);
+      } else {
+        setLoading(false);
+        setHasError(true);
+      }
+    }
   }
 
-
   useEffect(() => {
-    fecthCoinData();
+    const abortController = new AbortController();
+    fetchCoinData(abortController.signal);
+
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
 
@@ -79,7 +127,37 @@ const TrendingCoins = () => {
       </div>
 
       <div className="relative">
-        {topCoins.length > 0 ? (
+        {loading ? (
+          <div className="flex justify-center items-center py-16">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-300">Loading top 20 cryptocurrencies...</p>
+            </div>
+          </div>
+        ) : hasError || topCoins.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="text-center">
+              <div className="text-4xl mb-4">📊</div>
+              <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                Market Data Unavailable
+              </p>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">
+                Unable to load trending cryptocurrencies at the moment
+              </p>
+              <button
+                onClick={() => {
+                  setHasError(false);
+                  setLoading(true);
+                  const abortController = new AbortController();
+                  fetchCoinData(abortController.signal);
+                }}
+                className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        ) : (
           <AliceCarousel
             autoPlay={true}
             autoPlayInterval={3000}
@@ -170,10 +248,6 @@ const TrendingCoins = () => {
               </div>
             ))}
           </AliceCarousel>
-        ) : (
-          <div className="flex justify-center items-center py-16">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-          </div>
         )}
       </div>
     </div>

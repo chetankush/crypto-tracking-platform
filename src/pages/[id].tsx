@@ -52,6 +52,7 @@ const Coindetail = () => {
           color={isDark ? "white" : "black"}
           maxWidth="33vw"
           minWidth="400px"
+          as="section"
         >
           <DrawerHeader borderBottomWidth="1px" borderColor={isDark ? "#334155" : "gray.200"}>
             <div className="flex items-center gap-3">

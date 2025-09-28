@@ -51,38 +51,70 @@ const Hero = () => {
   }, [dispatch]);
 
   useEffect(() => {
+    const abortController = new AbortController();
     const fetchCoins = async () => {
       try {
         setLoading(true);
 
-        // Fetch all coins
+        // Fetch all coins with abort signal
         const allCoinsResponse = await fetch(
-          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency.toLowerCase()}&order=market_cap_desc&per_page=80&page=1&sparkline=false`
+          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency.toLowerCase()}&order=market_cap_desc&per_page=80&page=1&sparkline=false`,
+          { signal: abortController.signal }
         );
-        const allCoinsData = await allCoinsResponse.json();
-        setCryptoData(allCoinsData);
-        setOriginalARR(allCoinsData);
-        setFilteredArray(allCoinsData);
 
-        // Fetch metaverse coins
-        const metaverseResponse = await fetch(
-          `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency.toLowerCase()}&category=metaverse&order=market_cap_desc&per_page=80&page=1&sparkline=false`
-        );
-        const metaverseData = await metaverseResponse.json();
-        setMetaverseCoins(metaverseData);
-        setMetaverseFilter(metaverseData);
+        if (!allCoinsResponse.ok) {
+          throw new Error(`HTTP error! status: ${allCoinsResponse.status}`);
+        }
+
+        const allCoinsData = await allCoinsResponse.json();
+
+        // Only update state if we have valid data
+        if (allCoinsData && Array.isArray(allCoinsData) && allCoinsData.length > 0) {
+          setCryptoData(allCoinsData);
+          setOriginalARR(allCoinsData);
+          setFilteredArray(allCoinsData);
+        }
+
+        // Fetch metaverse coins with abort signal
+        try {
+          const metaverseResponse = await fetch(
+            `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency.toLowerCase()}&category=metaverse&order=market_cap_desc&per_page=80&page=1&sparkline=false`,
+            { signal: abortController.signal }
+          );
+
+          if (metaverseResponse.ok) {
+            const metaverseData = await metaverseResponse.json();
+            if (metaverseData && Array.isArray(metaverseData)) {
+              setMetaverseCoins(metaverseData);
+              setMetaverseFilter(metaverseData);
+            }
+          }
+        } catch (metaverseError) {
+          console.warn('Metaverse coins fetch failed, continuing with main coins:', metaverseError);
+        }
 
         setLoading(false);
       } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('Fetch was aborted');
+          return;
+        }
         console.error('Error fetching coins:', error);
         setLoading(false);
       }
     };
 
     fetchCoins();
-    const interval = setInterval(fetchCoins, 30000);
+    const interval = setInterval(() => {
+      if (!abortController.signal.aborted) {
+        fetchCoins();
+      }
+    }, 30000);
 
-    return () => clearInterval(interval);
+    return () => {
+      abortController.abort();
+      clearInterval(interval);
+    };
   }, [currency]);
 
   const searchHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -298,19 +330,22 @@ const Hero = () => {
 
           {/* Main Crypto Table */}
           <div className="overflow-hidden rounded-xl border border-white/20 dark:border-dark-border">
-            {cryptoData.length === 0 ? (
+            {loading ? (
+              <div className="flex justify-center items-center py-16">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+                  <p className="text-gray-600 dark:text-gray-300">Loading cryptocurrency data...</p>
+                </div>
+              </div>
+            ) : cryptoData.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16">
                 <RxCrossCircled className="text-5xl text-red-500 mb-4" />
                 <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">
                   No Results Found
                 </p>
                 <p className="text-gray-500 dark:text-gray-400 mt-2">
-                  Try adjusting your search criteria
+                  Try adjusting your search criteria or check your connection
                 </p>
-              </div>
-            ) : loading ? (
-              <div className="flex justify-center items-center py-16">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
               </div>
             ) : (
               <div className="overflow-x-auto">

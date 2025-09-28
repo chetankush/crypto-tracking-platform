@@ -155,13 +155,15 @@ const CoinDetailChart = (props: any) => {
 
 
     useEffect(() => {
-        const abortController = new AbortController();
-        fetchDataHandler(abortController.signal);
+        if (props.cryptoName) {
+            const abortController = new AbortController();
+            fetchDataHandler(abortController.signal);
 
-        return () => {
-            abortController.abort();
-        };
-    }, [])
+            return () => {
+                abortController.abort();
+            };
+        }
+    }, [props.cryptoName])
 
     // Helper function to safely format currency values
     const formatCurrency = (value: number | undefined) => {

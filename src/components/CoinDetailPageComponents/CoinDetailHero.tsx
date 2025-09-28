@@ -105,10 +105,15 @@ const CoinDetailHero = (props: any) => {
     })
     const [trendingCoinsData, setTrendingCoinsData] = useState<CoinData[]>([])
     const [coinName, setCoinName] = useState<string>("")
+    const [loading, setLoading] = useState(true)
 
 
     const fetchDataHandler = async (signal: AbortSignal) => {
+        console.log('🚀 Starting to fetch coin details for:', props.cryptoName);
+        setLoading(true);
+
         try {
+            console.log('📡 Fetching coin detail data...');
             const response1 = await fetch(
                 `https://api.coingecko.com/api/v3/coins/${props.cryptoName}?tickers=false&community_data=false&developer_data=false`,
                 { signal }
@@ -117,49 +122,68 @@ const CoinDetailHero = (props: any) => {
                 throw new Error(`Error fetching coin detail data: ${response1.status} ${response1.statusText}`);
             }
             const data1 = await response1.json();
+            console.log('✅ Coin detail data loaded:', data1.id, data1.name);
             setCoinDetailData(data1);
             setCoinName(data1.id);
 
         } catch (error) {
             if (error.name === 'AbortError') {
-                console.log('Coin detail fetch was cancelled');
+                console.log('⚠️ Coin detail fetch was cancelled');
                 return;
             }
-            console.error('Error fetching coin detail data:', error);
+            console.error('❌ Error fetching coin detail data:', error);
+            setLoading(false);
+            return;
         }
 
         try {
+            console.log('📡 Fetching trending coins data...');
             const response2 = await fetch('https://api.coingecko.com/api/v3/search/trending', { signal });
             if (!response2.ok) {
                 throw new Error(`Error fetching trending coins data: ${response2.status} ${response2.statusText}`);
             }
             const data2 = await response2.json();
+            console.log('✅ Trending coins data loaded:', data2.coins.length, 'coins');
             setTrendingCoinsData(data2.coins);
         } catch (error) {
             if (error.name === 'AbortError') {
-                console.log('Trending coins fetch was cancelled');
+                console.log('⚠️ Trending coins fetch was cancelled');
                 return;
             }
-            console.error('Error fetching trending coins data:', error);
+            console.error('❌ Error fetching trending coins data:', error);
         }
+
+        console.log('🎉 All coin data loading completed!');
+        setLoading(false);
     };
 
 
     useEffect(() => {
-        const abortController = new AbortController();
-        fetchDataHandler(abortController.signal);
+        if (props.cryptoName) {
+            const abortController = new AbortController();
+            fetchDataHandler(abortController.signal);
 
-        return () => {
-            abortController.abort();
-        };
-    }, [])
+            return () => {
+                abortController.abort();
+            };
+        }
+    }, [props.cryptoName])
 
 
 
 
     return (
         <div>
-            {coinDetailData && coinDetailData.market_data ? <div>
+            {loading ? (
+                <div className="flex justify-center items-center min-h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-500 mx-auto mb-6"></div>
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Loading Coin Details</h2>
+                        <p className="text-gray-600 dark:text-gray-300 mb-2">Fetching {props.cryptoName} data...</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">This may take a few moments</p>
+                    </div>
+                </div>
+            ) : coinDetailData && coinDetailData.market_data ? <div>
 
                 {coinDetailData && coinDetailData.market_data && <>
 
@@ -207,10 +231,10 @@ const CoinDetailHero = (props: any) => {
 
                         </div>
 
-                        {  /* CHILD2 TRENDING COINS */}
+                        {  /* CHILD2 TRENDING COINS - DESKTOP */}
 
                         {trendingCoinsData.length > 0 && (
-                            <div className='flex justify-center items-center gap-10 coinDetailCarouselHold mb-9 md:mb-0 bg-white dark:bg-dark-card rounded-md shadow-lg dark:shadow-none border border-gray-200 dark:border-dark-border p-4'>
+                            <div className='hidden md:flex justify-center items-center gap-10 coinDetailCarouselHold mb-9 md:mb-0 bg-white dark:bg-dark-card rounded-md shadow-lg dark:shadow-none border border-gray-200 dark:border-dark-border p-4'>
                                 <Swiper spaceBetween={5} slidesPerView={5} loop={true} parallax={true} modules={[Autoplay]} autoplay={{ delay: 1000 }} breakpoints={{ 300: { slidesPerView: 2 }, 700: { slidesPerView: 3 }, 1280: { slidesPerView: 5 } }} className='swiperCaro' >
                                     {trendingCoinsData.map((coin, index) => {
                                         return (
@@ -261,60 +285,126 @@ const CoinDetailHero = (props: any) => {
 
                 </div>}
 
+                {  /* CHILD2 TRENDING COINS - MOBILE */}
+
+                {trendingCoinsData.length > 0 && (
+                    <div className='flex md:hidden justify-center items-center gap-10 coinDetailCarouselHold mt-8 mb-9 bg-white dark:bg-dark-card rounded-md shadow-lg dark:shadow-none border border-gray-200 dark:border-dark-border p-4 ml-4 mr-4'>
+                        <Swiper spaceBetween={5} slidesPerView={5} loop={true} parallax={true} modules={[Autoplay]} autoplay={{ delay: 1000 }} breakpoints={{ 300: { slidesPerView: 2 }, 700: { slidesPerView: 3 }, 1280: { slidesPerView: 5 } }} className='swiperCaro' >
+                            {trendingCoinsData.map((coin, index) => {
+                                return (
+                                    <div key={index}>
+                                        <SwiperSlide>
+                                            <div >
+                                                <div className="flex gap-6 flex-wrap">
+                                                    <img src={coin.item.small} alt="" className='bg-white rounded-full w-16' />
+                                                    <p className='text-gray-400 dark:text-gray-300 font-semibold text-sm'> #{coin.item.market_cap_rank} </p>
+                                                </div>
+                                                <br />
+                                                <div className="flex flex-col gap-4">
+                                                    <p className='text-base font-semibold text-gray-900 dark:text-white'>{coin.item.name.substring(0, 8)}</p>
+                                                    <p className='text-gray-400 dark:text-gray-300 font-normal text-sm uppercase'> {coin.item.symbol} </p>
+                                                </div>
+                                            </div>
+                                        </SwiperSlide>
+
+                                    </div>
+                                )
+                            })}
+                        </Swiper>
+                    </div>
+                )}
 
                 <br />
                 <br />
                 <br />
 
-                {trendingCoinsData.length > 0 && <div className="coindDetailStats1Hold pr-4 pl-4 hidden lg:flex items-center justify-evenly flex-wrap gap-10">
+                {trendingCoinsData.length > 0 && (
+                    <div className="coindDetailStats1Hold pr-4 pl-4 mx-4">
+                        {/* Desktop Layout */}
+                        <div className="hidden lg:flex items-center justify-evenly flex-wrap gap-10">
+                            <div className="coinDetailStat1Hold items-center flex flex-col gap-8">
+                                <p className='text-xl font-semibold w-full pl-4 text-gray-900 dark:text-white'>Market Cap</p>
+                                <div className="pl-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className='text-2xl font-semibold text-gray-400 dark:text-gray-300 interFont'>$</span>
+                                        {coinDetailData.market_data && coinDetailData.market_data.market_cap.usd && <p className='font-semibold text-gray-800 dark:text-gray-100 interFont'>  {coinDetailData.market_data.market_cap.usd.toLocaleString()} </p>}
+                                    </div>
+                                </div>
+                            </div>
 
-                    <div className="coinDetailStat1Hold items-center flex flex-col gap-8">
-                        <p className='text-xl font-semibold w-full pl-4 text-gray-900 dark:text-white'>Market Cap</p>
-                        <div className="pl-3">
-                            <div className="flex items-center gap-2">
-                                <span className='text-2xl font-semibold text-gray-400 dark:text-gray-300 interFont'>$</span>
-                                {coinDetailData.market_data && coinDetailData.market_data.market_cap.usd && <p className='font-semibold text-gray-800 dark:text-gray-100 interFont'>  {coinDetailData.market_data.market_cap.usd.toLocaleString()} </p>}
+                            <p className='bg-gray-100 dark:bg-dark-border coinDetailDivider h-28'></p>
+
+                            <div className="coinDetailStat1Hold items-center flex flex-col gap-8">
+                                <p className='text-xl font-semibold w-full pl-4 text-gray-900 dark:text-white'>Fully Diluted</p>
+                                <div className="">
+                                    <div className="flex items-center gap-2">
+                                        <span className='text-2xl font-semibold text-gray-400 dark:text-gray-300 interFont'>$</span>
+                                        {coinDetailData.market_data && coinDetailData.market_data.fully_diluted_valuation.usd && <p className='font-semibold text-gray-800 dark:text-gray-100 interFont'>  {coinDetailData.market_data.fully_diluted_valuation.usd.toLocaleString()} </p>}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p className='bg-gray-100 dark:bg-dark-border coinDetailDivider h-28'></p>
+
+                            <div className="coinDetailStat1Hold items-center flex flex-col gap-8">
+                                <p className='text-xl font-semibold w-full pl-4 text-gray-900 dark:text-white'>Volume</p>
+                                <div className="pl-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className='text-2xl font-semibold text-gray-400 dark:text-gray-300 interFont'>$</span>
+                                        {coinDetailData.market_data && coinDetailData.market_data.total_volume.usd && <p className='font-semibold text-gray-800 dark:text-gray-100 interFont'>  {coinDetailData.market_data.total_volume.usd.toLocaleString()} </p>}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p className='bg-gray-100 dark:bg-dark-border coinDetailDivider h-28'></p>
+
+                            <div className="coinDetailStat1Hold items-center flex flex-col gap-8">
+                                <p className='text-xl font-semibold w-full pl-4 text-gray-900 dark:text-white'>Circulating Supply</p>
+                                <div className="pl-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className='text-2xl font-semibold text-gray-400 dark:text-gray-300 interFont'>$</span>
+                                        {coinDetailData.market_data && coinDetailData.market_data.circulating_supply && coinDetailData.symbol && <p className='font-semibold text-gray-800 dark:text-gray-100 interFont'>  {Math.floor(coinDetailData.market_data.circulating_supply).toLocaleString()}<span className='text-gray-300 dark:text-gray-400 font-normal uppercase'> {coinDetailData.symbol} </span> </p>}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Mobile Layout */}
+                        <div className="lg:hidden grid grid-cols-2 gap-4 mt-6">
+                            <div className="bg-white dark:bg-dark-card rounded-lg p-3 border border-gray-200 dark:border-dark-border shadow-sm dark:shadow-none">
+                                <p className='text-sm font-semibold text-gray-900 dark:text-white mb-2'>Market Cap</p>
+                                <div className="flex items-center gap-1">
+                                    <span className='text-lg font-semibold text-gray-400 dark:text-gray-300'>$</span>
+                                    {coinDetailData.market_data && coinDetailData.market_data.market_cap.usd && <p className='text-sm font-semibold text-gray-800 dark:text-gray-100'>{coinDetailData.market_data.market_cap.usd.toLocaleString()}</p>}
+                                </div>
+                            </div>
+
+                            <div className="bg-white dark:bg-dark-card rounded-lg p-3 border border-gray-200 dark:border-dark-border shadow-sm dark:shadow-none">
+                                <p className='text-sm font-semibold text-gray-900 dark:text-white mb-2'>Fully Diluted</p>
+                                <div className="flex items-center gap-1">
+                                    <span className='text-lg font-semibold text-gray-400 dark:text-gray-300'>$</span>
+                                    {coinDetailData.market_data && coinDetailData.market_data.fully_diluted_valuation.usd && <p className='text-sm font-semibold text-gray-800 dark:text-gray-100'>{coinDetailData.market_data.fully_diluted_valuation.usd.toLocaleString()}</p>}
+                                </div>
+                            </div>
+
+                            <div className="bg-white dark:bg-dark-card rounded-lg p-3 border border-gray-200 dark:border-dark-border shadow-sm dark:shadow-none">
+                                <p className='text-sm font-semibold text-gray-900 dark:text-white mb-2'>Volume</p>
+                                <div className="flex items-center gap-1">
+                                    <span className='text-lg font-semibold text-gray-400 dark:text-gray-300'>$</span>
+                                    {coinDetailData.market_data && coinDetailData.market_data.total_volume.usd && <p className='text-sm font-semibold text-gray-800 dark:text-gray-100'>{coinDetailData.market_data.total_volume.usd.toLocaleString()}</p>}
+                                </div>
+                            </div>
+
+                            <div className="bg-white dark:bg-dark-card rounded-lg p-3 border border-gray-200 dark:border-dark-border shadow-sm dark:shadow-none">
+                                <p className='text-sm font-semibold text-gray-900 dark:text-white mb-2'>Circulating Supply</p>
+                                <div className="flex items-center gap-1">
+                                    <span className='text-lg font-semibold text-gray-400 dark:text-gray-300'>$</span>
+                                    {coinDetailData.market_data && coinDetailData.market_data.circulating_supply && coinDetailData.symbol && <p className='text-sm font-semibold text-gray-800 dark:text-gray-100'>{Math.floor(coinDetailData.market_data.circulating_supply).toLocaleString()}<span className='text-gray-300 dark:text-gray-400 font-normal uppercase'> {coinDetailData.symbol}</span></p>}
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <p className='bg-gray-100 dark:bg-dark-border coinDetailDivider h-28'></p>
-
-                    <div className="coinDetailStat1Hold items-center flex flex-col gap-8">
-                        <p className='text-xl font-semibold w-full pl-4 text-gray-900 dark:text-white'>Fully Diluted</p>
-                        <div className="">
-                            <div className="flex items-center gap-2">
-                                <span className='text-2xl font-semibold text-gray-400 dark:text-gray-300 interFont'>$</span>
-                                {coinDetailData.market_data && coinDetailData.market_data.fully_diluted_valuation.usd && <p className='font-semibold text-gray-800 dark:text-gray-100 interFont'>  {coinDetailData.market_data.fully_diluted_valuation.usd.toLocaleString()} </p>}
-                            </div>
-                        </div>
-                    </div>
-
-                    <p className='bg-gray-100 dark:bg-dark-border coinDetailDivider h-28'></p>
-
-                    <div className="coinDetailStat1Hold items-center flex flex-col gap-8">
-                        <p className='text-xl font-semibold w-full pl-4 text-gray-900 dark:text-white'>Volume</p>
-                        <div className="pl-3">
-                            <div className="flex items-center gap-2">
-                                <span className='text-2xl font-semibold text-gray-400 dark:text-gray-300 interFont'>$</span>
-                                {coinDetailData.market_data && coinDetailData.market_data.total_volume.usd && <p className='font-semibold text-gray-800 dark:text-gray-100 interFont'>  {coinDetailData.market_data.total_volume.usd.toLocaleString()} </p>}
-                            </div>
-                        </div>
-                    </div>
-
-                    <p className='bg-gray-100 dark:bg-dark-border coinDetailDivider h-28'></p>
-
-                    <div className="coinDetailStat1Hold items-center flex flex-col gap-8">
-                        <p className='text-xl font-semibold w-full pl-4 text-gray-900 dark:text-white'>Circulating Supply</p>
-                        <div className="pl-3">
-                            <div className="flex items-center gap-2">
-                                <span className='text-2xl font-semibold text-gray-400 dark:text-gray-300 interFont'>$</span>
-                                {coinDetailData.market_data && coinDetailData.market_data.circulating_supply && coinDetailData.symbol && <p className='font-semibold text-gray-800 dark:text-gray-100 interFont'>  {Math.floor(coinDetailData.market_data.circulating_supply).toLocaleString()}<span className='text-gray-300 dark:text-gray-400 font-normal uppercase'> {coinDetailData.symbol} </span> </p>}
-                            </div>
-                        </div>
-                    </div>
-
-                </div>}
+                )}
 
                 <br />
                 <br />
@@ -326,8 +416,13 @@ const CoinDetailHero = (props: any) => {
 
             </div>
                 :
-                <div className='flex justify-center items-center'>
-                    <Loading />
+                <div className="flex justify-center items-center min-h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-red-500 mx-auto mb-6"></div>
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Coin Data</h2>
+                        <p className="text-gray-600 dark:text-gray-300 mb-2">Failed to load {props.cryptoName} details</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Please try refreshing the page</p>
+                    </div>
                 </div>
 
             }
