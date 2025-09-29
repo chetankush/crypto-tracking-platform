@@ -216,7 +216,7 @@ const Hero = () => {
               </h1>
 
               <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 mb-6">
-                Monitor real-time prices, track your portfolio, and stay ahead of the market with Ctrack's comprehensive crypto tracking platform.
+                Monitor real-time prices, track your portfolio, and stay ahead of the market with Ctracks comprehensive crypto tracking platform.
               </p>
 
               {/* Cryptocurrency Markets Section Header */}
