@@ -143,7 +143,7 @@ const CoinDetailChart = (props: any) => {
             setIsLoading(false);
 
         } catch (error) {
-            if (error.name === 'AbortError') {
+            if (error instanceof Error && error.name === 'AbortError') {
                 console.log('Chart data fetch was cancelled');
                 setIsLoading(false);
                 return;

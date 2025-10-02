@@ -60,7 +60,7 @@ const TrendingCoins = () => {
         }
       }
     } catch (error) {
-      if (error.name  === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         console.log('Trending coins fetch was cancelled');
         return;
       }

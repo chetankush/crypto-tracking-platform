@@ -127,7 +127,7 @@ const CoinDetailHero = (props: any) => {
             setCoinName(data1.id);
 
         } catch (error) {
-            if (error.name === 'AbortError') {
+            if (error instanceof Error && error.name === 'AbortError') {
                 console.log('⚠️ Coin detail fetch was cancelled');
                 return;
             }
@@ -146,7 +146,7 @@ const CoinDetailHero = (props: any) => {
             console.log('✅ Trending coins data loaded:', data2.coins.length, 'coins');
             setTrendingCoinsData(data2.coins);
         } catch (error) {
-            if (error.name === 'AbortError') {
+            if (error instanceof Error && error.name === 'AbortError') {
                 console.log('⚠️ Trending coins fetch was cancelled');
                 return;
             }
@@ -173,251 +173,150 @@ const CoinDetailHero = (props: any) => {
 
 
     return (
-        <div>
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
             {loading ? (
                 <div className="flex justify-center items-center min-h-screen">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-500 mx-auto mb-6"></div>
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500 mx-auto mb-6"></div>
                         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Loading Coin Details</h2>
                         <p className="text-gray-600 dark:text-gray-300 mb-2">Fetching {props.cryptoName} data...</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">This may take a few moments</p>
                     </div>
                 </div>
-            ) : coinDetailData && coinDetailData.market_data ? <div>
+            ) : coinDetailData && coinDetailData.market_data ? <div className="max-w-7xl mx-auto px-4 py-6">
 
                 {coinDetailData && coinDetailData.market_data && <>
 
-                    <nav className="container interFont lg:ml-20">
-                        <ol className="list-reset py-4 pl-1 rounded flex bg-gray-50 dark:bg-dark-bg/50 text-gray-600 dark:text-gray-300">
-                            <li className="px-2 text-gray-400 dark:text-gray-300"><a className="no-underline text-indigo-600 dark:text-indigo-400">Cryptocurrencies</a></li>
-                            <li className="text-gray-400 dark:text-gray-300">/</li>
-                            <li className="px-2 text-gray-400 dark:text-gray-300"><a className="no-underline text-indigo-600 dark:text-indigo-400">Coins</a></li>
-                            <li className="text-gray-400 dark:text-gray-300">/</li>
-                            <li className="px-2 capitalize text-gray-900 dark:text-white font-medium">{props.cryptoName}</li>
-                            <li className="text-gray-400 dark:text-gray-300">/</li>
-                            <li className="px-2 text-gray-400 dark:text-gray-300"><Link href={"/"} className="no-underline text-indigo-600 dark:text-indigo-400 hover:underline">Home</Link></li>
+                    <nav className="mb-6">
+                        <ol className="flex items-center space-x-2 text-sm">
+                            <li className="text-gray-500 dark:text-gray-400">Cryptocurrencies</li>
+                            <li className="text-gray-400 dark:text-gray-600">/</li>
+                            <li className="text-gray-500 dark:text-gray-400">Coins</li>
+                            <li className="text-gray-400 dark:text-gray-600">/</li>
+                            <li className="capitalize text-gray-900 dark:text-white font-medium">{props.cryptoName}</li>
+                            <li className="text-gray-400 dark:text-gray-600">/</li>
+                            <li><Link href={"/"} className="text-blue-600 dark:text-blue-400 hover:underline">Home</Link></li>
                         </ol>
                     </nav>
 
-                    <div className="coinDetailHeaderParentHold interFont flex justify-start ml-4 md:ml-0 mt-8 md:mt-0 md:justify-evenly gap-8 flex-wrap items-center">
-
-                        <div className="coinDetailParentOne mb-9 md:mb-0">
-                            <div className='flex items-center gap-6'>
-                                {<img src={coinDetailData.image.large} className='md:w-28 w-24 rounded-full' alt='ada' />}
-                                <div className="flex flex-col gap-8 items-center -ml-4">
-                                    <p className='font-normal text-xl uppercase text-gray-900 dark:text-white'> {coinDetailData.id} <span className='text-gray-400 dark:text-gray-300 font-normal text-sm relative -top-4'> #{coinDetailData.market_cap_rank} </span> </p>
-                                    <p className='font-semibold text-2xl text-gray-900 dark:text-white'> ${coinDetailData.market_data.current_price.usd.toLocaleString()}
-
-
-                                        <span className={coinDetailData.market_data.price_change_24h < 0 ? 'text-red-500' : 'text-green-500'}>
-                                            {coinDetailData.market_data.price_change_24h < 0 ?
-                                                <div className="flex items-center justify-end relative -top-14 left-5">
-                                                    <span className='text-sm'>
-                                                        {coinDetailData.market_data.price_change_24h.toFixed(0)}$
-                                                    </span>
-                                                </div>
-                                                :
-                                                <div className="flex items-center justify-end relative -top-14 left-5">
-                                                    <span className='text-sm'>
-                                                        +${coinDetailData.market_data.price_change_24h.toFixed(0)}
-                                                    </span>
-                                                </div>}
+                    <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm dark:shadow-none border border-gray-200 dark:border-dark-border p-6 mb-6">
+                        <div className="flex items-center justify-between flex-wrap gap-6">
+                            <div className="flex items-center gap-4">
+                                <img src={coinDetailData.image.large} className='w-16 h-16 rounded-full' alt={coinDetailData.id} />
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h1 className='text-2xl font-bold uppercase text-gray-900 dark:text-white'>{coinDetailData.id}</h1>
+                                        <span className='bg-gray-100 dark:bg-dark-border px-2 py-1 rounded text-xs font-medium text-gray-600 dark:text-gray-300'>
+                                            #{coinDetailData.market_cap_rank}
                                         </span>
-
-
-                                    </p>
+                                    </div>
+                                    <div className="flex items-baseline gap-3">
+                                        <p className='text-3xl font-bold text-gray-900 dark:text-white'>
+                                            ${coinDetailData.market_data.current_price.usd.toLocaleString()}
+                                        </p>
+                                        <span className={`text-sm font-semibold ${coinDetailData.market_data.price_change_24h < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                            {coinDetailData.market_data.price_change_24h < 0 ? '' : '+'}
+                                            ${coinDetailData.market_data.price_change_24h.toFixed(2)}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
+                            <div className="flex items-center gap-3">
+                                {coinDetailData.links && coinDetailData.links.homepage[0] && (
+                                    <Link href={coinDetailData.links.homepage[0]} target="_blank" className="p-2 bg-gray-100 dark:bg-dark-border hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                                        <IoHome className="text-lg text-gray-600 dark:text-gray-300" />
+                                    </Link>
+                                )}
+                                {coinDetailData.links && coinDetailData.links.repos_url.github[0] && (
+                                    <Link href={coinDetailData.links.repos_url.github[0]} target='_blank' className="p-2 bg-gray-100 dark:bg-dark-border hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                                        <FaGithub className="text-lg text-gray-600 dark:text-gray-300" />
+                                    </Link>
+                                )}
+                                {coinDetailData.links && coinDetailData.links.subreddit_url && (
+                                    <Link href={coinDetailData.links.subreddit_url} target='_blank' className="p-2 bg-gray-100 dark:bg-dark-border hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                                        <FaReddit className="text-lg text-gray-600 dark:text-gray-300" />
+                                    </Link>
+                                )}
+                            </div>
                         </div>
 
-                        {  /* CHILD2 TRENDING COINS - DESKTOP */}
-
-                        {trendingCoinsData.length > 0 && (
-                            <div className='hidden md:flex justify-center items-center gap-10 coinDetailCarouselHold mb-9 md:mb-0 bg-white dark:bg-dark-card rounded-md shadow-lg dark:shadow-none border border-gray-200 dark:border-dark-border p-4'>
-                                <Swiper spaceBetween={5} slidesPerView={5} loop={true} parallax={true} modules={[Autoplay]} autoplay={{ delay: 1000 }} breakpoints={{ 300: { slidesPerView: 2 }, 700: { slidesPerView: 3 }, 1280: { slidesPerView: 5 } }} className='swiperCaro' >
-                                    {trendingCoinsData.map((coin, index) => {
-                                        return (
-                                            <div key={index}>
-                                                <SwiperSlide>
-                                                    <div >
-                                                        <div className="flex gap-6 flex-wrap">
-                                                            <img src={coin.item.small} alt="" className='bg-white rounded-full w-16' />
-                                                            <p className='text-gray-400 dark:text-gray-300 font-semibold text-sm'> #{coin.item.market_cap_rank} </p>
-                                                        </div>
-                                                        <br />
-                                                        <div className="flex flex-col gap-4">
-                                                            <p className='text-base font-semibold text-gray-900 dark:text-white'>{coin.item.name.substring(0, 8)}</p>
-                                                            <p className='text-gray-400 dark:text-gray-300 font-normal text-sm uppercase'> {coin.item.symbol} </p>
-                                                        </div>
-                                                    </div>
-                                                </SwiperSlide>
-
-                                            </div>
-                                        )
-                                    })}
-                                </Swiper>
+                        {coinDetailData.categories && coinDetailData.categories.length > 0 && (
+                            <div className="flex items-center gap-2 mt-4">
+                                {coinDetailData.categories[0] && (
+                                    <span className="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full text-xs font-medium">
+                                        {coinDetailData.categories[0]}
+                                    </span>
+                                )}
+                                {coinDetailData.categories[1] && (
+                                    <span className="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full text-xs font-medium">
+                                        {coinDetailData.categories[1]}
+                                    </span>
+                                )}
                             </div>
                         )}
                     </div>
 
                 </>}
 
-                {trendingCoinsData.length > 0 && <div className="coinDetailTagsHold ml-4 md:flex-col flex-row flex w37percent items-center lg:flex">
-
-                    <div className='flex items-center gap-4 justify-start w48percent w-full flex-wrap mt-3'>
-                        {coinDetailData.categories && coinDetailData.categories[0] && <p className="bg-gray-200 dark:bg-dark-bg text-gray-700 dark:text-gray-200 w-auto pl-3 pr-3 flex justify-center shadow-sm dark:shadow-none border border-gray-300 dark:border-dark-border items-center rounded h-auto pt-2 pb-1"> {coinDetailData.categories[0]} </p>}
-                        {coinDetailData.categories && coinDetailData.categories[1] && <p className="bg-gray-200 dark:bg-dark-bg text-gray-700 dark:text-gray-200 w-auto pl-3 pr-3 flex justify-center shadow-sm dark:shadow-none border border-gray-300 dark:border-dark-border items-center rounded h-auto pt-2 pb-1"> {coinDetailData.categories[1]} </p>}
-                    </div>
-
-                </div>}
-
-                <br />
-
-                {trendingCoinsData.length > 0 && <div className="coinDetailTagsHold ml-4 md:flex-col flex-row flex w37percent items-center lg:flex">
-
-                    <div className='flex items-center gap-4 justify-start w48percent w-full flex-wrap mt-3'>
-                        {coinDetailData.links && coinDetailData.links.homepage[0] && <Link href={`${coinDetailData.links.homepage[0]}`} target="_blank" className="bg-gray-200 dark:bg-dark-bg text-gray-600 dark:text-gray-200 hover:text-gray-800 dark:hover:text-white w-auto pl-3 pr-3 flex justify-center items-center rounded-full h-9 shadow-sm dark:shadow-none border border-gray-300 dark:border-dark-border hover:shadow-md dark:hover:shadow-none hover:bg-gray-300 dark:hover:bg-gray-700 transition-all duration-200">  <IoHome className="text-lg" /> </Link>}
-                        {coinDetailData.links && coinDetailData.links.repos_url.github[0] && <Link href={`${coinDetailData.links.repos_url.github[0]}`} target='_blank' className="bg-gray-200 dark:bg-dark-bg text-gray-600 dark:text-gray-200 hover:text-gray-800 dark:hover:text-white w-auto pl-3 pr-3 flex justify-center items-center rounded-full h-9 shadow-sm dark:shadow-none border border-gray-300 dark:border-dark-border hover:shadow-md dark:hover:shadow-none hover:bg-gray-300 dark:hover:bg-gray-700 transition-all duration-200"> <FaGithub className="text-lg" /> </Link>}
-                        {coinDetailData.links && coinDetailData.links.subreddit_url && <Link href={`${coinDetailData.links.subreddit_url}`} target='_blank' className="bg-gray-200 dark:bg-dark-bg text-gray-600 dark:text-gray-200 hover:text-gray-800 dark:hover:text-white w-auto pl-3 pr-3 flex justify-center items-center rounded-full h-9 shadow-sm dark:shadow-none border border-gray-300 dark:border-dark-border hover:shadow-md dark:hover:shadow-none hover:bg-gray-300 dark:hover:bg-gray-700 transition-all duration-200"> <FaReddit className="text-lg" /> </Link>}
-
-                    </div>
-
-                </div>}
-
-                {  /* CHILD2 TRENDING COINS - MOBILE */}
-
                 {trendingCoinsData.length > 0 && (
-                    <div className='flex md:hidden justify-center items-center gap-10 coinDetailCarouselHold mt-8 mb-9 bg-white dark:bg-dark-card rounded-md shadow-lg dark:shadow-none border border-gray-200 dark:border-dark-border p-4 ml-4 mr-4'>
-                        <Swiper spaceBetween={5} slidesPerView={5} loop={true} parallax={true} modules={[Autoplay]} autoplay={{ delay: 1000 }} breakpoints={{ 300: { slidesPerView: 2 }, 700: { slidesPerView: 3 }, 1280: { slidesPerView: 5 } }} className='swiperCaro' >
+                    <div className='bg-white dark:bg-dark-card rounded-xl shadow-sm dark:shadow-none border border-gray-200 dark:border-dark-border p-6 mb-6'>
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Trending Coins</h2>
+                        <Swiper spaceBetween={15} slidesPerView={5} loop={true} parallax={true} modules={[Autoplay]} autoplay={{ delay: 2000 }} breakpoints={{ 300: { slidesPerView: 2 }, 700: { slidesPerView: 3 }, 1024: { slidesPerView: 4 }, 1280: { slidesPerView: 5 } }} className='swiperCaro' >
                             {trendingCoinsData.map((coin, index) => {
                                 return (
-                                    <div key={index}>
-                                        <SwiperSlide>
-                                            <div >
-                                                <div className="flex gap-6 flex-wrap">
-                                                    <img src={coin.item.small} alt="" className='bg-white rounded-full w-16' />
-                                                    <p className='text-gray-400 dark:text-gray-300 font-semibold text-sm'> #{coin.item.market_cap_rank} </p>
-                                                </div>
-                                                <br />
-                                                <div className="flex flex-col gap-4">
-                                                    <p className='text-base font-semibold text-gray-900 dark:text-white'>{coin.item.name.substring(0, 8)}</p>
-                                                    <p className='text-gray-400 dark:text-gray-300 font-normal text-sm uppercase'> {coin.item.symbol} </p>
-                                                </div>
-                                            </div>
-                                        </SwiperSlide>
-
-                                    </div>
+                                    <SwiperSlide key={index}>
+                                        <div className="flex flex-col items-center text-center p-3 hover:bg-gray-50 dark:hover:bg-dark-border rounded-lg transition-colors">
+                                            <img src={coin.item.small} alt={coin.item.name} className='w-12 h-12 rounded-full mb-2' />
+                                            <p className='text-xs text-gray-400 dark:text-gray-500 mb-1'>#{coin.item.market_cap_rank}</p>
+                                            <p className='text-sm font-semibold text-gray-900 dark:text-white mb-1'>{coin.item.name.substring(0, 10)}</p>
+                                            <p className='text-xs text-gray-500 dark:text-gray-400 uppercase'>{coin.item.symbol}</p>
+                                        </div>
+                                    </SwiperSlide>
                                 )
                             })}
                         </Swiper>
                     </div>
                 )}
 
-                <br />
-                <br />
-                <br />
-
                 {trendingCoinsData.length > 0 && (
-                    <div className="coindDetailStats1Hold pr-4 pl-4 mx-4">
-                        {/* Desktop Layout */}
-                        <div className="hidden lg:flex items-center justify-evenly flex-wrap gap-10">
-                            <div className="coinDetailStat1Hold items-center flex flex-col gap-8">
-                                <p className='text-xl font-semibold w-full pl-4 text-gray-900 dark:text-white'>Market Cap</p>
-                                <div className="pl-3">
-                                    <div className="flex items-center gap-2">
-                                        <span className='text-2xl font-semibold text-gray-400 dark:text-gray-300 interFont'>$</span>
-                                        {coinDetailData.market_data && coinDetailData.market_data.market_cap.usd && <p className='font-semibold text-gray-800 dark:text-gray-100 interFont'>  {coinDetailData.market_data.market_cap.usd.toLocaleString()} </p>}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <p className='bg-gray-100 dark:bg-dark-border coinDetailDivider h-28'></p>
-
-                            <div className="coinDetailStat1Hold items-center flex flex-col gap-8">
-                                <p className='text-xl font-semibold w-full pl-4 text-gray-900 dark:text-white'>Fully Diluted</p>
-                                <div className="">
-                                    <div className="flex items-center gap-2">
-                                        <span className='text-2xl font-semibold text-gray-400 dark:text-gray-300 interFont'>$</span>
-                                        {coinDetailData.market_data && coinDetailData.market_data.fully_diluted_valuation.usd && <p className='font-semibold text-gray-800 dark:text-gray-100 interFont'>  {coinDetailData.market_data.fully_diluted_valuation.usd.toLocaleString()} </p>}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <p className='bg-gray-100 dark:bg-dark-border coinDetailDivider h-28'></p>
-
-                            <div className="coinDetailStat1Hold items-center flex flex-col gap-8">
-                                <p className='text-xl font-semibold w-full pl-4 text-gray-900 dark:text-white'>Volume</p>
-                                <div className="pl-3">
-                                    <div className="flex items-center gap-2">
-                                        <span className='text-2xl font-semibold text-gray-400 dark:text-gray-300 interFont'>$</span>
-                                        {coinDetailData.market_data && coinDetailData.market_data.total_volume.usd && <p className='font-semibold text-gray-800 dark:text-gray-100 interFont'>  {coinDetailData.market_data.total_volume.usd.toLocaleString()} </p>}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <p className='bg-gray-100 dark:bg-dark-border coinDetailDivider h-28'></p>
-
-                            <div className="coinDetailStat1Hold items-center flex flex-col gap-8">
-                                <p className='text-xl font-semibold w-full pl-4 text-gray-900 dark:text-white'>Circulating Supply</p>
-                                <div className="pl-3">
-                                    <div className="flex items-center gap-2">
-                                        <span className='text-2xl font-semibold text-gray-400 dark:text-gray-300 interFont'>$</span>
-                                        {coinDetailData.market_data && coinDetailData.market_data.circulating_supply && coinDetailData.symbol && <p className='font-semibold text-gray-800 dark:text-gray-100 interFont'>  {Math.floor(coinDetailData.market_data.circulating_supply).toLocaleString()}<span className='text-gray-300 dark:text-gray-400 font-normal uppercase'> {coinDetailData.symbol} </span> </p>}
-                                    </div>
-                                </div>
-                            </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-white dark:bg-dark-card rounded-xl p-5 shadow-sm dark:shadow-none border border-gray-200 dark:border-dark-border">
+                            <p className='text-sm text-gray-500 dark:text-gray-400 mb-2 font-medium'>Market Cap</p>
+                            <p className='text-xl font-bold text-gray-900 dark:text-white'>
+                                ${coinDetailData.market_data && coinDetailData.market_data.market_cap.usd && coinDetailData.market_data.market_cap.usd.toLocaleString()}
+                            </p>
                         </div>
 
-                        {/* Mobile Layout */}
-                        <div className="lg:hidden grid grid-cols-2 gap-4 mt-6">
-                            <div className="bg-white dark:bg-dark-card rounded-lg p-3 border border-gray-200 dark:border-dark-border shadow-sm dark:shadow-none">
-                                <p className='text-sm font-semibold text-gray-900 dark:text-white mb-2'>Market Cap</p>
-                                <div className="flex items-center gap-1">
-                                    <span className='text-lg font-semibold text-gray-400 dark:text-gray-300'>$</span>
-                                    {coinDetailData.market_data && coinDetailData.market_data.market_cap.usd && <p className='text-sm font-semibold text-gray-800 dark:text-gray-100'>{coinDetailData.market_data.market_cap.usd.toLocaleString()}</p>}
-                                </div>
-                            </div>
+                        <div className="bg-white dark:bg-dark-card rounded-xl p-5 shadow-sm dark:shadow-none border border-gray-200 dark:border-dark-border">
+                            <p className='text-sm text-gray-500 dark:text-gray-400 mb-2 font-medium'>Fully Diluted</p>
+                            <p className='text-xl font-bold text-gray-900 dark:text-white'>
+                                ${coinDetailData.market_data && coinDetailData.market_data.fully_diluted_valuation.usd && coinDetailData.market_data.fully_diluted_valuation.usd.toLocaleString()}
+                            </p>
+                        </div>
 
-                            <div className="bg-white dark:bg-dark-card rounded-lg p-3 border border-gray-200 dark:border-dark-border shadow-sm dark:shadow-none">
-                                <p className='text-sm font-semibold text-gray-900 dark:text-white mb-2'>Fully Diluted</p>
-                                <div className="flex items-center gap-1">
-                                    <span className='text-lg font-semibold text-gray-400 dark:text-gray-300'>$</span>
-                                    {coinDetailData.market_data && coinDetailData.market_data.fully_diluted_valuation.usd && <p className='text-sm font-semibold text-gray-800 dark:text-gray-100'>{coinDetailData.market_data.fully_diluted_valuation.usd.toLocaleString()}</p>}
-                                </div>
-                            </div>
+                        <div className="bg-white dark:bg-dark-card rounded-xl p-5 shadow-sm dark:shadow-none border border-gray-200 dark:border-dark-border">
+                            <p className='text-sm text-gray-500 dark:text-gray-400 mb-2 font-medium'>24h Volume</p>
+                            <p className='text-xl font-bold text-gray-900 dark:text-white'>
+                                ${coinDetailData.market_data && coinDetailData.market_data.total_volume.usd && coinDetailData.market_data.total_volume.usd.toLocaleString()}
+                            </p>
+                        </div>
 
-                            <div className="bg-white dark:bg-dark-card rounded-lg p-3 border border-gray-200 dark:border-dark-border shadow-sm dark:shadow-none">
-                                <p className='text-sm font-semibold text-gray-900 dark:text-white mb-2'>Volume</p>
-                                <div className="flex items-center gap-1">
-                                    <span className='text-lg font-semibold text-gray-400 dark:text-gray-300'>$</span>
-                                    {coinDetailData.market_data && coinDetailData.market_data.total_volume.usd && <p className='text-sm font-semibold text-gray-800 dark:text-gray-100'>{coinDetailData.market_data.total_volume.usd.toLocaleString()}</p>}
-                                </div>
-                            </div>
-
-                            <div className="bg-white dark:bg-dark-card rounded-lg p-3 border border-gray-200 dark:border-dark-border shadow-sm dark:shadow-none">
-                                <p className='text-sm font-semibold text-gray-900 dark:text-white mb-2'>Circulating Supply</p>
-                                <div className="flex items-center gap-1">
-                                    <span className='text-lg font-semibold text-gray-400 dark:text-gray-300'>$</span>
-                                    {coinDetailData.market_data && coinDetailData.market_data.circulating_supply && coinDetailData.symbol && <p className='text-sm font-semibold text-gray-800 dark:text-gray-100'>{Math.floor(coinDetailData.market_data.circulating_supply).toLocaleString()}<span className='text-gray-300 dark:text-gray-400 font-normal uppercase'> {coinDetailData.symbol}</span></p>}
-                                </div>
-                            </div>
+                        <div className="bg-white dark:bg-dark-card rounded-xl p-5 shadow-sm dark:shadow-none border border-gray-200 dark:border-dark-border">
+                            <p className='text-sm text-gray-500 dark:text-gray-400 mb-2 font-medium'>Circulating Supply</p>
+                            <p className='text-xl font-bold text-gray-900 dark:text-white'>
+                                {coinDetailData.market_data && coinDetailData.market_data.circulating_supply && Math.floor(coinDetailData.market_data.circulating_supply).toLocaleString()}
+                                <span className='text-sm text-gray-400 dark:text-gray-500 font-normal ml-1 uppercase'>{coinDetailData.symbol}</span>
+                            </p>
                         </div>
                     </div>
                 )}
-
-                <br />
-                <br />
-                <br />
-                <br>
-                </br>
 
                 {trendingCoinsData.length > 0 && <CoinDetailChart cryptoName={coinName} specificCoinDetails={coinDetailData} />}
 
             </div>
                 :
                 <div className="flex justify-center items-center min-h-screen">
-                    <div className="text-center">
+                    <div className="text-center p-8 bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-200 dark:border-dark-border">
                         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-red-500 mx-auto mb-6"></div>
                         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Coin Data</h2>
                         <p className="text-gray-600 dark:text-gray-300 mb-2">Failed to load {props.cryptoName} details</p>

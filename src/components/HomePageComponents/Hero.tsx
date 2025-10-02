@@ -95,7 +95,7 @@ const Hero = () => {
 
         setLoading(false);
       } catch (error) {
-        if (error.name === 'AbortError') {
+        if (error instanceof Error && error.name === 'AbortError') {
           console.log('Fetch was aborted');
           return;
         }
